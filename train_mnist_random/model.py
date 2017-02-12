@@ -26,8 +26,7 @@ if os.path.isfile(sequence_filename):
 else:
 	config = Params()
 	config.num_classes = 10
-	config.num_critic = 5
-	config.weight_init_std = 0.001
+	config.weight_init_std = 0.1
 	config.weight_initializer = "Normal"
 	config.nonlinearity = "relu"
 	config.optimizer = "adam"
