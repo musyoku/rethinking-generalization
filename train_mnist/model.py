@@ -4,6 +4,9 @@ from chainer import cuda
 sys.path.append(os.path.split(os.getcwd())[0])
 from args import args
 from discriminator import Params, Discriminator
+from sequential import Sequential
+from sequential.layers import Linear, BatchNormalization, MinibatchDiscrimination
+from sequential.functions import Activation, dropout, gaussian_noise, softmax
 
 # load params.json
 try:

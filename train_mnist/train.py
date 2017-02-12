@@ -10,6 +10,17 @@ from mnist_tools import load_train_images, load_test_images
 from model import model
 from args import args
 
+def compute_accuracy(image_batch, label_batch):
+	num_data = image_batch.shape[0]
+	images_l_segments = np.split(image_batch, num_data // 500)
+	label_ids_l_segments = np.split(label_batch, num_data // 500)
+	sum_accuracy = 0
+	for image_batch, label_batch in zip(images_l_segments, label_ids_l_segments):
+		distribution = model.discriminate(image_batch, apply_softmax=True, test=True)
+		accuracy = F.accuracy(distribution, model.to_variable(label_batch))
+		sum_accuracy += float(accuracy.data)
+	return sum_accuracy / len(images_l_segments)
+
 def main():
 	# load MNIST images
 	images, labels = dataset.load_train_images()
@@ -21,7 +32,7 @@ def main():
 	max_epoch = 1000
 	num_trains_per_epoch = 500
 	num_validation_data = 10000
-	batchsize = 100
+	batchsize = 128
 
 	# seed
 	np.random.seed(args.seed)
@@ -32,7 +43,7 @@ def main():
 	csv_results = []
 
 	# create semi-supervised split
-	training_images, training_labels, validation_images, validation_labels = dataset.create_semisupervised(images, labels, num_validation_data, num_labeled_data, discriminator_config.ndim_output, seed=args.seed)
+	training_images, training_labels, validation_images, validation_labels = dataset.split_data(images, labels, num_validation_data, seed=args.seed)
 
 	# training
 	progress = Progress()
@@ -42,31 +53,24 @@ def main():
 
 		for t in xrange(num_trains_per_epoch):
 			# sample from data distribution
-			image_batch, label_batch = dataset.sample_data(training_images, training_labels, batchsize, config.ndim_input, config.ndim_output, binarize=False)
+			image_batch, label_batch = dataset.sample_data(training_images, training_labels, batchsize, binarize=False)
 			distribution = model.discriminate(image_batch, apply_softmax=False)
 			loss = F.softmax_cross_entropy(distribution, model.to_variable(label_batch))
-
 			sum_loss += float(loss.data)
+
+			model.backprop(loss)
 
 			if t % 10 == 0:
 				progress.show(t, num_trains_per_epoch, {})
 
 		model.save(args.model_dir)
-
-		# validation
-		image_batch, label_batch = dataset.sample_data(validation_images, validation_labels, num_validation_data, config.ndim_input, config.ndim_output, binarize=False)
-		images_l_segments = np.split(image_batch, num_validation_data // 500)
-		label_ids_l_segments = np.split(label_batch, num_validation_data // 500)
-		sum_accuracy = 0
-		for image_batch, label_batch in zip(images_l_segments, label_ids_l_segments):
-			y_distribution, _ = model.discriminate(image_batch, apply_softmax=True, test=True)
-			accuracy = F.accuracy(y_distribution, model.to_variable(label_batch))
-			sum_accuracy += float(accuracy.data)
-		validation_accuracy = sum_accuracy / len(images_l_segments)
+		train_accuracy = compute_accuracy(training_images, training_labels)
+		validation_accuracy = compute_accuracy(validation_images, validation_labels)
 		
 		progress.show(num_trains_per_epoch, num_trains_per_epoch, {
 			"loss": sum_loss / num_trains_per_epoch,
-			"accuracy": validation_accuracy,
+			"accuracy (validation)": validation_accuracy,
+			"accuracy (train)": train_accuracy,
 		})
 
 		# write accuracy to csv

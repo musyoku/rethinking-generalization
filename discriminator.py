@@ -7,9 +7,6 @@ from chainer import functions as F
 from chainer import links as L
 import sequential
 from args import args
-from sequential import Sequential
-from sequential.layers import Linear, BatchNormalization, MinibatchDiscrimination
-from sequential.functions import Activation, dropout, gaussian_noise, softmax
 
 class Object(object):
 	pass
@@ -99,10 +96,10 @@ class Discriminator():
 
 	def discriminate(self, x_batch, test=False, apply_softmax=True):
 		x_batch = self.to_variable(x_batch)
-		prob, activations = self.discriminator(x_batch, test=test, return_activations=True)
+		prob = self.discriminator(x_batch, test=test)
 		if apply_softmax:
 			prob = F.softmax(prob)
-		return prob, activations
+		return prob
 
 	def backprop(self, loss):
 		self.discriminator.backprop(loss)
