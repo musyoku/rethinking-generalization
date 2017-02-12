@@ -29,8 +29,8 @@ def main():
 	config = model.config
 
 	# settings
-	max_epoch = 1000
-	num_trains_per_epoch = 500
+	max_epoch = 10000
+	num_trains_per_epoch = 5000
 	num_validation_data = 10000
 	batchsize = 128
 
@@ -76,9 +76,9 @@ def main():
 		})
 
 		# write accuracy to csv
-		csv_results.append([epoch, validation_accuracy, progress.get_total_time()])
+		csv_results.append([epoch, train_accuracy, validation_accuracy, progress.get_total_time()])
 		data = pd.DataFrame(csv_results)
-		data.columns = ["epoch", "accuracy", "min"]
+		data.columns = ["epoch", "train_accuracy", "validation_accuracy", "min"]
 		data.to_csv("{}/result.csv".format(args.model_dir))
 
 if __name__ == "__main__":
