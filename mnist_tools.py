@@ -31,26 +31,26 @@ def load_mnist(data_filename, label_filename, num):
 	return images, label
 
 def load_train_images():
-	if not os.path.exists(train_images_filename):
+	if not os.path.exists("../" + train_images_filename):
 		download_mnist_data()
-	images, labels = load_mnist(train_images_filename, train_labels_filename, n_train)
+	images, labels = load_mnist("../" + train_images_filename, "../" + train_labels_filename, n_train)
 	return images, labels
 
 def load_test_images():
-	if not os.path.exists(test_images_filename):
+	if not os.path.exists("../" + test_images_filename):
 		download_mnist_data()
-	images, labels = load_mnist(test_images_filename, test_labels_filename, n_test)
+	images, labels = load_mnist("../" + test_images_filename, "../" + test_labels_filename, n_test)
 	return images, labels
 
 def download_mnist_data():
 	print("Downloading {} ...".format(train_images_filename))
-	request.urlretrieve("{}/{}".format(parent, train_images_filename), train_images_filename)
+	request.urlretrieve("{}/{}".format(parent, train_images_filename), "../" + train_images_filename)
 	print("Downloading {} ...".format(train_labels_filename))
-	request.urlretrieve("{}/{}".format(parent, train_labels_filename), train_labels_filename)
+	request.urlretrieve("{}/{}".format(parent, train_labels_filename), "../" + train_labels_filename)
 	print("Downloading {} ...".format(test_images_filename))
-	request.urlretrieve("{}/{}".format(parent, test_images_filename), test_images_filename)
+	request.urlretrieve("{}/{}".format(parent, test_images_filename), "../" + test_images_filename)
 	print("Downloading {} ...".format(test_labels_filename))
-	request.urlretrieve("{}/{}".format(parent, test_labels_filename), test_labels_filename)
+	request.urlretrieve("{}/{}".format(parent, test_labels_filename), "../" + test_labels_filename)
 	print("Done")
 
 def extract_bitmaps():
