@@ -20,7 +20,7 @@ def to_object(dict):
 class Params():
 	def __init__(self, dict=None):
 		self.num_classes = 10
-		self.weight_init_std = 1
+		self.weight_std = 1
 		self.weight_initializer = "Normal"		# Normal, GlorotNormal or HeNormal
 		self.nonlinearity = "elu"
 		self.optimizer = "Adam"
@@ -55,7 +55,7 @@ class Discriminator():
 		self.params = copy.deepcopy(params)
 		self.config = to_object(params["config"])
 
-		self.discriminator = sequential.chain.Chain()
+		self.discriminator = sequential.chain.Chain(self.config.weight_initializer, self.config.weight_std)
 		self.discriminator.add_sequence(sequential.from_dict(params["model"]))
 		self.discriminator.setup_optimizers(self.config.optimizer, self.config.learning_rate, self.config.momentum)
 

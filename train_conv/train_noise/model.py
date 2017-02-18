@@ -5,7 +5,7 @@ sys.path.append(os.path.split(os.getcwd())[0])
 from args import args
 from discriminator import Params, Discriminator
 from sequential import Sequential
-from sequential.layers import Linear, BatchNormalization, MinibatchDiscrimination
+from sequential.layers import Linear, BatchNormalization, Convolution2D
 from sequential.functions import Activation, dropout, gaussian_noise, softmax
 
 # load params.json
@@ -26,7 +26,7 @@ if os.path.isfile(sequence_filename):
 else:
 	config = Params()
 	config.num_classes = 10
-	config.weight_init_std = 0.1
+	config.weight_std = 0.1
 	config.weight_initializer = "Normal"
 	config.nonlinearity = "relu"
 	config.optimizer = "adam"
@@ -35,13 +35,16 @@ else:
 	config.gradient_clipping = 1
 	config.weight_decay = 0
 
-	model = Sequential(weight_initializer=config.weight_initializer, weight_init_std=config.weight_init_std)
-	model.add(Linear(None, 500))
+	model = Sequential()
+	model.add(Convolution2D(1, 32, ksize=4, stride=2, pad=1))
+	model.add(BatchNormalization(32))
 	model.add(Activation(config.nonlinearity))
-	model.add(BatchNormalization(500))
-	model.add(Linear(None, 500))
+	model.add(Convolution2D(32, 64, ksize=4, stride=2, pad=1))
+	model.add(BatchNormalization(64))
 	model.add(Activation(config.nonlinearity))
-	model.add(BatchNormalization(500))
+	model.add(Convolution2D(64, 128, ksize=3, stride=2, pad=1))
+	model.add(BatchNormalization(128))
+	model.add(Activation(config.nonlinearity))
 	model.add(Linear(None, config.num_classes))
 
 	params = {

@@ -3,7 +3,7 @@ import os, sys, time, math
 from chainer import cuda
 from chainer import functions as F
 import pandas as pd
-sys.path.append(os.path.split(os.getcwd())[0])
+sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "../../")))
 import dataset
 from progress import Progress
 from mnist_tools import load_train_images, load_test_images
@@ -11,6 +11,7 @@ from model import model
 from args import args
 
 def compute_accuracy(image_batch, label_batch):
+	image_batch = np.reshape(image_batch, (-1, 1, 28, 28))
 	num_data = image_batch.shape[0]
 	images_l_segments = np.split(image_batch, num_data // 500)
 	label_ids_l_segments = np.split(label_batch, num_data // 500)
@@ -29,7 +30,7 @@ def main():
 	config = model.config
 
 	# settings
-	max_epoch = 10000
+	max_epoch = 1000
 	num_trains_per_epoch = 5000
 	num_validation_data = 10000
 	batchsize = 128
@@ -44,8 +45,6 @@ def main():
 
 	# create semi-supervised split
 	training_images, training_labels, validation_images, validation_labels = dataset.split_data(images, labels, num_validation_data, seed=args.seed)
-	training_labels = np.random.randint(0, config.num_classes, training_labels.size).astype(np.int32)
-	validation_labels = np.random.randint(0, config.num_classes, validation_labels.size).astype(np.int32)
 
 	# training
 	progress = Progress()
@@ -56,6 +55,7 @@ def main():
 		for t in xrange(num_trains_per_epoch):
 			# sample from data distribution
 			image_batch, label_batch = dataset.sample_data(training_images, training_labels, batchsize, binarize=False)
+			image_batch = np.reshape(image_batch, (-1, 1, 28, 28))
 			distribution = model.discriminate(image_batch, apply_softmax=False)
 			loss = F.softmax_cross_entropy(distribution, model.to_variable(label_batch))
 			sum_loss += float(loss.data)
@@ -76,9 +76,9 @@ def main():
 		})
 
 		# write accuracy to csv
-		csv_results.append([epoch, train_accuracy, validation_accuracy, progress.get_total_time()])
+		csv_results.append([epoch, validation_accuracy, progress.get_total_time()])
 		data = pd.DataFrame(csv_results)
-		data.columns = ["epoch", "train_accuracy", "validation_accuracy", "min"]
+		data.columns = ["epoch", "accuracy", "min"]
 		data.to_csv("{}/result.csv".format(args.model_dir))
 
 if __name__ == "__main__":

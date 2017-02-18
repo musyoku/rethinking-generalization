@@ -1,3 +1,35 @@
+import chainer
+
+def get_weight_initializer(weight_initializer, weight_std):
+	assert weight_initializer is not None
+	if weight_initializer.lower() == "normal":
+		return chainer.initializers.Normal(weight_std)
+	if weight_initializer.lower() == "glorotnormal":
+		return chainer.initializers.GlorotNormal(weight_std)
+	if weight_initializer.lower() == "henormal":
+		return chainer.initializers.HeNormal(weight_std)
+	raise Exception()
+
+def get_optimizer(name, lr, momentum=0.9):
+	if name.lower() == "adam":
+		return chainer.optimizers.Adam(alpha=lr, beta1=momentum)
+	if name.lower() == "eve":
+		return Eve(alpha=lr, beta1=momentum)
+	if name.lower() == "adagrad":
+		return chainer.optimizers.AdaGrad(lr=lr)
+	if name.lower() == "adadelta":
+		return chainer.optimizers.AdaDelta(rho=momentum)
+	if name.lower() == "nesterov" or name.lower() == "nesterovag":
+		return chainer.optimizers.NesterovAG(lr=lr, momentum=momentum)
+	if name.lower() == "rmsprop":
+		return chainer.optimizers.RMSprop(lr=lr, alpha=momentum)
+	if name.lower() == "momentumsgd":
+		return chainer.optimizers.MomentumSGD(lr=lr, mommentum=mommentum)
+	if name.lower() == "sgd":
+		return chainer.optimizers.SGD(lr=lr)
+	raise Exception()
+
+
 def get_conv_outsize(in_size, ksize, stride, padding, cover_all=False, d=1):
 	dk = ksize + (ksize - 1) * (d - 1)
 	if cover_all:
@@ -35,9 +67,9 @@ def get_paddings_of_deconv_layers(target_size, num_layers, ksize, stride):
 	# compute required deconv paddings
 	paddings = []
 	deconv_out_sizes = [target_size]
-	deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
-	deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
-	deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
+	for i in xrange(num_layers):
+		deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
+		
 	# target_size of hidden layer must be an even number
 	for i, size in enumerate(deconv_out_sizes[1:-1]):
 		if size % 2 == 1:
@@ -54,7 +86,6 @@ def get_in_size_of_deconv_layers(target_size, num_layers, ksize, stride):
 	# compute required deconv paddings
 	paddings = []
 	deconv_out_sizes = [target_size]
-	deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
-	deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
-	deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
+	for i in xrange(num_layers):
+		deconv_out_sizes.append(get_conv_outsize(deconv_out_sizes[-1], ksize, stride, get_conv_padding(deconv_out_sizes[-1], ksize, stride)))
 	return deconv_out_sizes[-1]

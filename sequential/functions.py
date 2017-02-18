@@ -3,6 +3,7 @@ from chainer import cuda, Variable
 from chainer import functions as F
 
 class Function(object):
+
 	def __call__(self, x):
 		raise NotImplementedError()
 
@@ -163,17 +164,6 @@ class gaussian_noise(Function):
 		ln_var = math.log(self.std ** 2)
 		noise = F.gaussian(Variable(xp.zeros_like(x.data)), Variable(xp.full_like(x.data, ln_var)))
 		return x + noise
-
-class average_pooling_2d(Function):
-	def __init__(self, ksize, stride=None, pad=0, use_cudnn=True):
-		self._function = "average_pooling_2d"
-		self.ksize = ksize
-		self.stride = stride
-		self.pad = pad
-		self.use_cudnn = use_cudnn
-
-	def __call__(self, x):
-		return F.average_pooling_2d(x, self.ksize, self.stride, self.pad, self.use_cudnn)
 
 class average_pooling_2d(Function):
 	def __init__(self, ksize, stride=None, pad=0, use_cudnn=True):
